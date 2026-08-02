@@ -318,7 +318,8 @@ After completing this project, you will understand:
 # 👨‍💻 Developed By
 
 **Sanju Solanki**
-**
+**Kuldeep Verma**
+**Jai Tanwar**
 
 Machine Learning Project
 
