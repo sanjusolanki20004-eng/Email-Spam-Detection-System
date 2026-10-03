@@ -1,67 +1,186 @@
-import streamlit as st
 import os
 import pickle
+import streamlit as st
 
-# Page settings
+
+# =========================================================
+# PAGE CONFIGURATION
+# =========================================================
+
 st.set_page_config(
     page_title="Email Spam Detection",
     page_icon="📧",
     layout="centered"
 )
 
-# Load model and vectorizer
+
+# =========================================================
+# FIND PROJECT DIRECTORIES
+# =========================================================
+
+# app.py is inside:
+# E-MAIL-SPAM-PROJECT/app/app.py
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-model = pickle.load(open(os.path.join(BASE_DIR, "..", "Model", "spam_model.pkl"), "rb"))
-vectorizer = pickle.load(open(os.path.join(BASE_DIR, "..", "Model", "vectorizer.pkl"), "rb"))
+# Go one level up from /app
+PROJECT_DIR = os.path.dirname(BASE_DIR)
 
-# Sidebar
+# Model folder:
+# E-MAIL-SPAM-PROJECT/model/
+MODEL_DIR = os.path.join(PROJECT_DIR, "model")
+
+
+# =========================================================
+# MODEL FILE PATHS
+# =========================================================
+
+MODEL_PATH = os.path.join(
+    MODEL_DIR,
+    "spam_model.pkl"
+)
+
+VECTORIZER_PATH = os.path.join(
+    MODEL_DIR,
+    "vectorizer.pkl"
+)
+
+
+# =========================================================
+# LOAD MODEL AND VECTORIZER
+# =========================================================
+
+@st.cache_resource
+def load_model_and_vectorizer():
+
+    if not os.path.exists(MODEL_PATH):
+        raise FileNotFoundError(
+            f"Model file not found: {MODEL_PATH}"
+        )
+
+    if not os.path.exists(VECTORIZER_PATH):
+        raise FileNotFoundError(
+            f"Vectorizer file not found: {VECTORIZER_PATH}"
+        )
+
+    with open(MODEL_PATH, "rb") as model_file:
+        model = pickle.load(model_file)
+
+    with open(VECTORIZER_PATH, "rb") as vectorizer_file:
+        vectorizer = pickle.load(vectorizer_file)
+
+    return model, vectorizer
+
+
+# Load model
+try:
+    model, vectorizer = load_model_and_vectorizer()
+
+except Exception as e:
+    st.error("❌ Model could not be loaded.")
+    st.error(str(e))
+
+    st.stop()
+
+
+# =========================================================
+# SIDEBAR
+# =========================================================
+
 st.sidebar.title("📌 Project Details")
+
 st.sidebar.write("**Project:** Email Spam Detection")
 st.sidebar.write("**Algorithm:** Multinomial Naive Bayes")
 st.sidebar.write("**Vectorizer:** TF-IDF")
+st.sidebar.write("**Framework:** Streamlit")
 
-# Main title
-st.title("📧 Email Spam Detection System")
-st.markdown("---")
+st.sidebar.markdown("---")
 
-st.write("Enter an email message below and click **Predict**.")
-
-# Input
-email = st.text_area(
-    "✉️ Email Text",
-    height=180,
-    placeholder="Type or paste your email here..."
+st.sidebar.info(
+    "This project classifies an email message "
+    "as Spam or Ham (Not Spam)."
 )
 
-col1, col2 = st.columns(2)
 
-with col1:
-    predict = st.button("🔍 Predict", use_container_width=True)
+# =========================================================
+# MAIN TITLE
+# =========================================================
 
-with col2:
-    clear = st.button("🗑 Clear", use_container_width=True)
-
-if predict:
-
-    if email.strip() == "":
-        st.warning("⚠️ Please enter an email.")
-    else:
-        email_vector = vectorizer.transform([email])
-        prediction = model.predict(email_vector)
-
-        st.markdown("---")
-
-        if prediction[0] == 1:
-            st.error("🚨 **Result: SPAM EMAIL**")
-        else:
-            st.success("✅ **Result: HAM (Safe Email)**")
-
-        st.info(f"📄 Characters: {len(email)}")
-        st.info(f"📝 Words: {len(email.split())}")
-
-if clear:
-    st.rerun()
+st.title("📧 Email Spam Detection System")
 
 st.markdown("---")
-st.caption("Developed using Python • Streamlit • Scikit-learn")
+
+st.write(
+    "Enter an email message below and click **Predict** "
+    "to determine whether it is Spam or Not Spam."
+)
+
+
+# =========================================================
+# EMAIL INPUT
+# =========================================================
+
+email = st.text_area(
+    "✉️ Email Text",
+    height=200,
+    placeholder="Enter your email message here..."
+)
+
+
+# =========================================================
+# PREDICTION
+# =========================================================
+
+if st.button("🔍 Predict"):
+
+    if not email.strip():
+
+        st.warning("⚠️ Please enter an email message.")
+
+    else:
+
+        try:
+
+            # Convert email text into TF-IDF features
+            email_vector = vectorizer.transform([email])
+
+            # Make prediction
+            prediction = model.predict(email_vector)[0]
+
+            # =================================================
+            # RESULT
+            # =================================================
+
+            if prediction == 1:
+
+                st.error("🚨 SPAM EMAIL")
+
+                st.write(
+                    "This email is likely to be spam."
+                )
+
+            else:
+
+                st.success("✅ HAM / NOT SPAM")
+
+                st.write(
+                    "This email appears to be legitimate."
+                )
+
+        except Exception as e:
+
+            st.error("❌ Prediction failed.")
+
+            st.write(str(e))
+
+
+# =========================================================
+# FOOTER
+# =========================================================
+
+st.markdown("---")
+
+st.caption(
+    "Email Spam Detection System | "
+    "Machine Learning Project"
+)
