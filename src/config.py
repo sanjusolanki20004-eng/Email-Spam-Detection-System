@@ -1,8 +1,11 @@
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# Project root directory
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-DATASET_PATH = PROJECT_ROOT / "Src" / "Data1" / "email_spam_dataset (1).csv"
+# Dataset
+DATASET_PATH = BASE_DIR / "data" / "email_spam_dataset (1).csv"
 
-MODEL_PATH = PROJECT_ROOT / "Model" / "spam_model.pkl"
-VECTORIZER_PATH = PROJECT_ROOT / "Model" / "vectorizer.pkl"
+# Saved model files
+MODEL_PATH = BASE_DIR / "model" / "spam_model.pkl"
+VECTORIZER_PATH = BASE_DIR / "model" / "vectorizer.pkl"
